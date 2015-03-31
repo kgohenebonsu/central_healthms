@@ -1,0 +1,76 @@
+
+body { 
+    background-color: white;
+}
+
+.theLoginWidth {
+  /*width: 1000px;*/
+  text-align: center;
+
+}
+.theRegisterWidth {
+  width: 700px;
+  text-align: center;
+
+}
+
+.navbar-inverse{
+	background-image:-webkit-linear-gradient(top,#6f5499 0,#6f5499 100%);
+	background-image:-o-linear-gradient(top,#6f5499 0,#6f5499 100%);
+	background-image:-webkit-gradient(linear,left top,left bottom,from(#6f5499),to(#6f5499));
+	background-image:linear-gradient(to bottom,#6f5499 0,#6f5499 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#6f5499', endColorstr='#6f5499', GradientType=0);
+	filter:progid:DXImageTransform.Microsoft.gradient(enabled=false);
+	background-repeat:repeat-x;
+}
+
+.panel {
+	margin-bottom:20px;
+	background-color:#fff;
+	border:1px	solid transparent;
+	border-radius:4px;
+	-webkit-box-shadow:0 1px 1px rgba(0,0,0,.05);
+	box-shadow:0 1px 1px rgba(0,0,0,.05)
+}
+
+.panel-body{
+		padding:15px
+	}
+.panel-heading{
+	padding:10px 15px;
+	border-bottom:1px solid transparent;
+	border-top-left-radius:3px;
+	border-top-right-radius:3px
+}
+
+.panel-info{
+	border-color:#6f5499
+}
+
+.panel-info>.panel-heading{
+	color:white;
+	background-color:#6f5499;
+	border-color:#6f5499;
+}
+
+.panel-info>.panel-heading+.panel-collapse>.panel-body{
+	border-top-color:#6f5499;
+}
+
+.panel-info>.panel-heading .badge{
+	color:#6f5499;
+	background-color:#6f5499
+}
+
+.panel-info>.panel-footer+.panel-collapse>.panel-body{
+	border-bottom-color:#6f5499
+}
+
+.panel-info>.panel-heading{
+	background-image:-webkit-linear-gradient(top,#6f5499 0,#6f5499 100%);
+	background-image:-o-linear-gradient(top,#6f5499 0,#6f5499 100%);
+	background-image:-webkit-gradient(linear,left top,left bottom,from(#6f5499),to(#6f5499));
+	background-image:linear-gradient(to bottom,#6f5499 0,#6f5499 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#6f5499', endColorstr='#6f5499', GradientType=0);
+	background-repeat:repeat-x;
+}
