@@ -69,7 +69,7 @@ include_once 'health_action.php';
                             <b class="caret"></b></div></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a href="#"><i class="fa fa-fw fa-gear"></i> Settings</a>
+                            <a href="settings.php"><i class="fa fa-fw fa-gear"></i> Settings</a>
                         </li>
                         <li class="divider"></li>
                         <li>
@@ -101,9 +101,10 @@ include_once 'health_action.php';
                         <a href="sub_districts.php"><div style="color:white;"><i class="fa fa-fw fa-desktop">
                         </i> Sub-Districts</div></a>
                     </li>
-                    <!-- <li>
-                        <a href="bootstrap-grid.html"><i class="fa fa-fw fa-wrench"></i> Bootstrap Grid</a>
-                    </li> -->
+                    <li>
+                        <a href="settings.php"><div style="color:white;"><i class="fa fa-fw fa-gear">
+                        </i> System Settings</div></a>
+                    </li>
                 </ul>
             </div>
             <!-- /.navbar-collapse -->
@@ -132,7 +133,7 @@ include_once 'health_action.php';
                         <br><br>
                         <form action='dashboard.php' method='POST' class='form-horizontal'>
                             <?php
-                                display_region_names();
+                                display_regions();
                             ?><br>
                             <div class='input-group'>
                               <span class='input-group-addon' id='basic-addon1'>FROM</span>
@@ -165,25 +166,26 @@ include_once 'health_action.php';
                             
                             //$row=$obj->fetch();
 
-                            if ($from == "" || $to == "") {
+                            if ($from == "" || $to == "" || $region == "") {
                                 echo "<br><br>";
-                                echo "<center>Enter Valid Dates To View Statistics</center>";
+                                echo "<center>Enter Valid Dates or Region To View Statistics</center>";
                             }
 
                             else if ($result == null) {
                                 echo "<br><br>";
-                                echo "<center><h5>No Health Cases Were Recorded Between <b>" . $from . "</b> and <b>" . $to . "</b> in the " . $region . " region </h5></center>";
+                                echo "<center><h5>No Health Cases Were Recorded Between <b>" . $from . "</b> and <b>" . $to . "</b></h5></center>";
                             }
 
                             else {
 
                                 echo "<br><br>";
-                                echo "<center><h5>Health Cases That Were Recorded Between <b>" . $from . "</b> and <b>" . $to . "</b> in the " . $region . " region </h5></center>";
+                                echo "<center><h5>Health Cases That Were Recorded Between <b>" . $from . "</b> and <b>" . $to . "</b></h5></center>";
                                 
                                 echo "<br><table class='table table-striped'>";
                                     echo "<thead><tr>";
                                         echo "<th>DISEASE</th>";
                                         echo "<th>NUMBER OF CASES</th>";
+                                        echo "<th>REGION</th>";
                                     echo "</tr></thead>";
                                     echo "<tbody>";
 
@@ -191,6 +193,7 @@ include_once 'health_action.php';
                                 echo "<tr>";
                                 echo "<td>$result[d_name]</td>";
                                 echo "<td>$result[num_cases]</td>";
+                                echo "<td>$result[regions]</td>";
                                 echo "</tr>";
 
                             $result=$obj->fetch();

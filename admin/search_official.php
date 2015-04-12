@@ -81,7 +81,7 @@ include_once 'health_action.php';
                             <b class="caret"></b></div></a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a href="#"><i class="fa fa-fw fa-gear"></i> Settings</a>
+                            <a href="settings.php"><i class="fa fa-fw fa-gear"></i> Settings</a>
                         </li>
                         <li class="divider"></li>
                         <li>
@@ -113,9 +113,10 @@ include_once 'health_action.php';
                         <a href="sub_districts.php"><div style="color:white;"><i class="fa fa-fw fa-desktop">
                         </i> Sub-Districts</div></a>
                     </li>
-                    <!-- <li>
-                        <a href="bootstrap-grid.html"><i class="fa fa-fw fa-wrench"></i> Bootstrap Grid</a>
-                    </li> -->
+                    <li>
+                        <a href="settings.php"><div style="color:white;"><i class="fa fa-fw fa-gear">
+                        </i> System Settings</div></a>
+                    </li>
                 </ul>
             </div>
             <!-- /.navbar-collapse -->

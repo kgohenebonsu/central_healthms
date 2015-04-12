@@ -228,6 +228,7 @@
     	}
 	}
 
+	//Function to register new patient
 	function register_patient(){
 		$fname  = $_REQUEST["fname"];
 		$lname  = $_REQUEST["lname"];
@@ -246,16 +247,6 @@
 		$onefname = $thefname[0];
 		$thelname = strtolower($lname);
 		$patient_system_id = $onefname."".$thelname."".$pin;
-
-		// $url = "http://api.smsgh.com/v3/messages/send?"
-  //               . "From=CentralHealthMS"
-  //               . "&To={$contact}"
-  //               . "&Content=Hello+{$fname}+{$lname},+You+have+successfully+registered+onto+CentralHealthMS.+Your+PIN:+{$patient_system_id}.+Developed+by+Kobby_Ohene"
-  //               . "&ClientId=odfbifrp"
-  //               . "&ClientSecret=rktegnml"
-  //               . "&RegisteredDelivery=true";
-  //               // Fire the request and wait for the response
-  //               $response = file_get_contents($url);
 
 		$db = new adb();
 		$db -> connect();
@@ -292,7 +283,13 @@
 		$db = new adb();
 		$db -> connect();
 
-		$result = mysql_query("SELECT * FROM hms_local_patient_registration ORDER BY lname");
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT * FROM hms_local_patient_registration ORDER BY lname LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
@@ -325,8 +322,25 @@
         	echo "No Registered Patients were found.";
     	}
 
+    	$sql = "SELECT * FROM hms_local_patient_registration"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='manage_patients.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='manage_patients.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='manage_patients.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
+
 	}
 
+	// Function to display list of patient hospital visits
 	function see_patient_visits_by_id($id){
 
 		$db = new adb();
@@ -381,15 +395,12 @@
 		$temperature  = $_REQUEST["temperature"];
 		$theTemp = $temperature. " " . $temp;
 		$blood_pressure  = $_REQUEST["blood_pressure"];
-
 		$weight_value  = $_REQUEST["weight_value"];
 		$weight  = $_REQUEST["weight"];
 		$theWeight = $weight_value. " " . $weight;
-
 		$height_value  = $_REQUEST["height_value"];
 		$height  = $_REQUEST["height"];
 		$theHeight = $height_value. " " . $height;
-
 		$symptoms  = $_REQUEST["symptoms"];
 		$lab_tests  = $_REQUEST["lab_tests"];
 		$test_results  = $_REQUEST["test_results"];
@@ -401,7 +412,6 @@
 
 		$db = new adb();
 		$db -> connect();
-
 		$query1 = "SET FOREIGN_KEY_CHECKS=0";
 		mysql_query($query1);
 
@@ -418,8 +428,7 @@
 					window.location.href="manage_patients.php";
 				</script>
 				<?php
-		}
-		else {
+		} else {
 			?>
 				<script>
 					alert("ERROR: Make sure all fields are filled!");
@@ -510,12 +519,14 @@
 		return $db -> fetch();
 	}
 
+	//Function to display patient registration information
 	function get_patient_by_id($id){
 
 		$db = new adb();
 		$db -> connect();
 
-		$result = "SELECT local_p_id, fname, lname, hms_gender.gender, date_of_birth, address, hms_nationality_status.nationality_status, hms_sub_districts.sub_district_name , hms_districts.district_name, hms_regions.region_name, contact, email, patient_system_id, last_date_updated 
+		$result = "SELECT local_p_id, fname, lname, hms_gender.gender, date_of_birth, address, hms_nationality_status.nationality_status, 
+		hms_sub_districts.sub_district_name , hms_districts.district_name, hms_regions.region_name, contact, email, patient_system_id, last_date_updated 
 		FROM hms_local_patient_registration, hms_nationality_status, hms_gender, hms_sub_districts, hms_districts, hms_regions 
 		WHERE hms_local_patient_registration.nationality = hms_nationality_status.nation_id
 		AND hms_local_patient_registration.sub_district = hms_sub_districts.sub_district_id 

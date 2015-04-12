@@ -72,10 +72,66 @@
 	else if (isset($_REQUEST["see_all_cases"])) {
 		see_all_cases();
 	}
-	else if (isset($_REQUEST["display_region_names"])) {
-		display_region_names();
+	else if (isset($_REQUEST["see_all_diseases"])) {
+		see_all_diseases();
 	}
-	
+	else if (isset($_REQUEST["add_disease"])) {
+		add_disease();
+	}
+	else if (isset($_REQUEST["get_disease_by_id"])) {
+		get_disease_by_id();
+	}
+	else if (isset($_REQUEST["edit_disease"])) {
+		edit_disease();
+	}
+	else if (isset($_REQUEST["see_all_rooms"])) {
+		see_all_rooms();
+	}
+	else if (isset($_REQUEST["add_room"])) {
+		add_room();
+	}
+	else if (isset($_REQUEST["get_room_by_id"])) {
+		get_room_by_id();
+	}
+	else if (isset($_REQUEST["edit_room"])) {
+		edit_room();
+	}
+	else if (isset($_REQUEST["see_all_medicines"])) {
+		see_all_medicines();
+	}
+	else if (isset($_REQUEST["add_medicine"])) {
+		add_medicine();
+	}
+	else if (isset($_REQUEST["get_medicine_by_id"])) {
+		get_medicine_by_id();
+	}
+	else if (isset($_REQUEST["edit_medicine"])) {
+		edit_medicine();
+	}
+	else if (isset($_REQUEST["see_all_payment_modes"])) {
+		see_all_payment_modes();
+	}
+	else if (isset($_REQUEST["add_payment_mode"])) {
+		add_payment_mode();
+	}
+	else if (isset($_REQUEST["get_payment_mode_by_id"])) {
+		get_payment_mode_by_id();
+	}
+	else if (isset($_REQUEST["edit_payment_mode"])) {
+		edit_payment_mode();
+	}
+	else if (isset($_REQUEST["see_all_wards"])) {
+		see_all_wards();
+	}
+	else if (isset($_REQUEST["add_ward"])) {
+		add_ward();
+	}
+	else if (isset($_REQUEST["get_ward_by_id"])) {
+		get_ward_by_id();
+	}
+	else if (isset($_REQUEST["edit_ward"])) {
+		edit_ward();
+	}
 
 
 	function login(){
@@ -160,6 +216,611 @@
 
 	}
 
+	function see_all_medicines(){
+
+		$db = new adb();
+		$db -> connect();
+
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT * FROM hms_medicine ORDER BY med_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
+
+		if(mysql_num_rows($result) > 0){
+        echo "<table class='table table-striped'>";
+            echo "<thead><tr>";
+                echo "<th>MEDICINE</th>";
+                echo "<th>DESCRIPTION</th>";
+                echo "<th>UPDATE</th>";
+            echo "</tr></thead>";
+		    echo "<tbody>";
+		while($row = mysql_fetch_array($result)){
+			echo "<tr>";
+			echo "<td>" . $row['med_name'] . "</td>";
+			echo "<td>" . $row['med_description'] . "</td>";
+			echo "<td><a href='update_medicine.php?id=$row[m_id]'>Click To Update</a></td>";
+			echo "</tr>";
+		}
+		echo "</tbody>
+			</table>";
+			mysql_free_result($result);
+		}
+
+		else{
+        	echo "<center><h4>No Medicines were found in the system database!</h4></center>";
+    	}
+
+    	$sql = "SELECT * FROM hms_medicine"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='medicines.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='medicines.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='medicines.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
+
+	}
+
+	function add_medicine(){
+		$medicine  = $_REQUEST["medicine"];
+		$description  = $_REQUEST["description"];
+
+		if ($medicine == "" || $description == "") {
+			?>
+				<script>
+					alert("ERROR: Enter Name And Description of Medicine!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$query1 = "SET FOREIGN_KEY_CHECKS=0";
+		mysql_query($query1);
+
+		$query = "INSERT INTO hms_medicine (med_name, med_description) VALUES('$medicine', '$description')";
+		$query2 = "SET FOREIGN_KEY_CHECKS=1";
+		mysql_query($query2);
+		$result = mysql_query($query) or die(mysql_error());
+		
+		if($result == 1){
+			?>
+				<script>
+					alert("Medicine Added!");
+					window.location.href="medicines.php";
+				</script>
+				<?php
+			}
+		}
+	}
+
+	function get_medicine_by_id($id){
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = "SELECT * FROM hms_medicine WHERE m_id=$id";
+
+		if(!$db->query($result)){
+				return false;
+			}
+
+		return $db -> fetch();
+	}
+
+	function edit_medicine(){
+		$med_name = $_REQUEST['med_name'];
+		$description = $_REQUEST['description'];
+        $id = $_REQUEST['m_id'];
+
+        if ($med_name == "" || $description == "") {
+			?>
+				<script>
+					alert("ERROR: Enter Name and Description Of Medicine!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = mysql_query("UPDATE hms_medicine SET med_name = '$med_name', med_description = '$description' WHERE m_id='$id'");
+		if($result === FALSE) { 
+		    die(mysql_error()); // TODO: better error handling
+		}
+
+        if ($result == 1) {
+            ?>
+                <script>
+                    alert("Medicine Updated!");
+                    window.location.href="medicines.php";
+                </script>
+            <?php
+        	}
+        }
+	}
+
+	function see_all_payment_modes(){
+
+		$db = new adb();
+		$db -> connect();
+
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT * FROM hms_payment_mode ORDER BY pm_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
+
+		if(mysql_num_rows($result) > 0){
+        echo "<table class='table table-striped'>";
+            echo "<thead><tr>";
+                echo "<th>PAYMENT MODE</th>";
+                echo "<th>UPDATE</th>";
+            echo "</tr></thead>";
+		    echo "<tbody>";
+		while($row = mysql_fetch_array($result)){
+			echo "<tr>";
+			echo "<td>" . $row['pm_name'] . "</td>";
+			echo "<td><a href='update_payment_mode.php?id=$row[pm_id]'>Click To Update</a></td>";
+			echo "</tr>";
+		}
+		echo "</tbody>
+			</table>";
+			mysql_free_result($result);
+		}
+
+		else{
+        	echo "<center><h4>No Payment Modes were found in the system database!</h4></center>";
+    	}
+
+    	$sql = "SELECT * FROM hms_payment_mode"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='payment_modes.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='payment_modes.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='payment_modes.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
+
+	}
+
+	function add_payment_mode(){
+		$pm_name  = $_REQUEST["pm_name"];
+
+		if ($pm_name == "") {
+			?>
+				<script>
+					alert("ERROR: Enter a Payment Mode!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$query1 = "SET FOREIGN_KEY_CHECKS=0";
+		mysql_query($query1);
+
+		$query = "INSERT INTO hms_payment_mode (pm_name) VALUES('$pm_name')";
+		$query2 = "SET FOREIGN_KEY_CHECKS=1";
+		mysql_query($query2);
+		$result = mysql_query($query) or die(mysql_error());
+		
+		if($result == 1){
+			?>
+				<script>
+					alert("Payment Mode Added!");
+					window.location.href="payment_modes.php";
+				</script>
+				<?php
+			}
+		}
+	}
+
+	function get_payment_mode_by_id($id){
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = "SELECT * FROM hms_payment_mode WHERE pm_id=$id";
+
+		if(!$db->query($result)){
+				return false;
+			}
+
+		return $db -> fetch();
+	}
+
+	function edit_payment_mode(){
+		$pm_name = $_REQUEST['pm_name'];
+        $id = $_REQUEST['pm_id'];
+
+        if ($pm_name == "") {
+			?>
+				<script>
+					alert("ERROR: Enter Name Of Payment Mode!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = mysql_query("UPDATE hms_payment_mode SET pm_name = '$pm_name' WHERE pm_id='$id'");
+		if($result === FALSE) { 
+		    die(mysql_error()); // TODO: better error handling
+		}
+
+        if ($result == 1) {
+            ?>
+                <script>
+                    alert("Payment Mode Updated!");
+                    window.location.href="payment_modes.php";
+                </script>
+            <?php
+        	}
+        }
+	}
+
+	function see_all_wards(){
+
+		$db = new adb();
+		$db -> connect();
+
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT * FROM hms_wards ORDER BY ward_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
+
+		if(mysql_num_rows($result) > 0){
+        echo "<table class='table table-striped'>";
+            echo "<thead><tr>";
+                echo "<th>WARD</th>";
+                echo "<th>UPDATE</th>";
+            echo "</tr></thead>";
+		    echo "<tbody>";
+		while($row = mysql_fetch_array($result)){
+			echo "<tr>";
+			echo "<td>" . $row['ward_name'] . "</td>";
+			echo "<td><a href='update_ward.php?id=$row[ward_id]'>Click To Update</a></td>";
+			echo "</tr>";
+		}
+		echo "</tbody>
+			</table>";
+			mysql_free_result($result);
+		}
+
+		else{
+        	echo "<center><h4>No Wards were found in the system database!</h4></center>";
+    	}
+
+    	$sql = "SELECT * FROM hms_wards"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='wards.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='wards.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='wards.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
+
+	}
+
+	function add_ward(){
+		$ward_name  = $_REQUEST["ward_name"];
+
+		if ($ward_name == "") {
+			?>
+				<script>
+					alert("ERROR: Enter a Ward!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$query1 = "SET FOREIGN_KEY_CHECKS=0";
+		mysql_query($query1);
+
+		$query = "INSERT INTO hms_wards (ward_name) VALUES('$ward_name')";
+		$query2 = "SET FOREIGN_KEY_CHECKS=1";
+		mysql_query($query2);
+		$result = mysql_query($query) or die(mysql_error());
+		
+		if($result == 1){
+			?>
+				<script>
+					alert("Ward Added!");
+					window.location.href="wards.php";
+				</script>
+				<?php
+			}
+		}
+	}
+
+	function get_ward_by_id($id){
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = "SELECT * FROM hms_wards WHERE ward_id=$id";
+
+		if(!$db->query($result)){
+				return false;
+			}
+
+		return $db -> fetch();
+	}
+
+	function edit_ward(){
+		$ward_name = $_REQUEST['ward_name'];
+        $id = $_REQUEST['ward_id'];
+
+        if ($ward_name == "") {
+			?>
+				<script>
+					alert("ERROR: Enter Name Of Ward!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = mysql_query("UPDATE hms_wards SET ward_name = '$ward_name' WHERE ward_id='$id'");
+		if($result === FALSE) { 
+		    die(mysql_error()); // TODO: better error handling
+		}
+
+        if ($result == 1) {
+            ?>
+                <script>
+                    alert("Ward Updated!");
+                    window.location.href="wards.php";
+                </script>
+            <?php
+        	}
+        }
+	}
+
+	function see_all_rooms(){
+
+		$db = new adb();
+		$db -> connect();
+
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT * FROM hms_consulting_rooms ORDER BY room_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
+
+		if(mysql_num_rows($result) > 0){
+        echo "<table class='table table-striped'>";
+            echo "<thead><tr>";
+                echo "<th>ROOM</th>";
+                echo "<th>UPDATE</th>";
+            echo "</tr></thead>";
+		    echo "<tbody>";
+		while($row = mysql_fetch_array($result)){
+			echo "<tr>";
+			echo "<td>" . $row['room_name'] . "</td>";
+			echo "<td><a href='update_room.php?id=$row[room_id]'>Click To Update</a></td>";
+			echo "</tr>";
+		}
+		echo "</tbody>
+			</table>";
+			mysql_free_result($result);
+		}
+
+		else{
+        	echo "<center><h4>No Rooms were found in the system database!</h4></center>";
+    	}
+
+    	$sql = "SELECT * FROM hms_consulting_rooms"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='consulting_rooms.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='consulting_rooms.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='consulting_rooms.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
+
+	}
+
+	function add_room(){
+		$room  = $_REQUEST["room"];
+
+		if ($room == "") {
+			?>
+				<script>
+					alert("ERROR: Enter a Room!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$query1 = "SET FOREIGN_KEY_CHECKS=0";
+		mysql_query($query1);
+
+		$query = "INSERT INTO hms_consulting_rooms (room_name) VALUES('$room')";
+		$query2 = "SET FOREIGN_KEY_CHECKS=1";
+		mysql_query($query2);
+		$result = mysql_query($query) or die(mysql_error());
+		
+		if($result == 1){
+			?>
+				<script>
+					alert("Room Added!");
+					window.location.href="consulting_rooms.php";
+				</script>
+				<?php
+			}
+		}
+	}
+
+	function get_room_by_id($id){
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = "SELECT * FROM hms_consulting_rooms WHERE room_id=$id";
+
+		if(!$db->query($result)){
+				return false;
+			}
+
+		return $db -> fetch();
+	}
+
+	function edit_room(){
+		$room_name = $_REQUEST['room_name'];
+        $id = $_REQUEST['room_id'];
+
+        if ($room_name == "") {
+			?>
+				<script>
+					alert("ERROR: Enter Name Of Room!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = mysql_query("UPDATE hms_consulting_rooms SET room_name = '$room_name' WHERE room_id='$id'");
+		if($result === FALSE) { 
+		    die(mysql_error()); // TODO: better error handling
+		}
+
+        if ($result == 1) {
+            ?>
+                <script>
+                    alert("Consulting Room Updated!");
+                    window.location.href="consulting_rooms.php";
+                </script>
+            <?php
+        	}
+        }
+	}
+
+	function see_all_diseases(){
+
+		$db = new adb();
+		$db -> connect();
+
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT * FROM hms_diseases ORDER BY d_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
+
+		if(mysql_num_rows($result) > 0){
+        echo "<table class='table table-striped'>";
+            echo "<thead><tr>";
+                echo "<th>DISEASE</th>";
+                echo "<th>UPDATE</th>";
+            echo "</tr></thead>";
+		    echo "<tbody>";
+		while($row = mysql_fetch_array($result)){
+			echo "<tr>";
+			echo "<td>" . $row['d_name'] . "</td>";
+			echo "<td><a href='update_disease.php?id=$row[d_id]'>Click To Update</a></td>";
+			echo "</tr>";
+		}
+		echo "</tbody>
+			</table>";
+			mysql_free_result($result);
+		}
+
+		else{
+        	echo "<center><h4>No Diseases were found in the system database!</h4></center>";
+    	}
+
+    	$sql = "SELECT * FROM hms_diseases"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='diseases.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='diseases.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='diseases.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
+
+	}
+
 	function see_all_cases(){
 
 		$db = new adb();
@@ -195,6 +856,90 @@
         	echo "<center><h4>No Health Cases Have Been Recorded Today!</h4></center>";
     	}
 
+	}
+
+	function add_disease(){
+		$disease  = $_REQUEST["disease"];
+
+		if ($disease == "") {
+			?>
+				<script>
+					alert("ERROR: Enter a Disease!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$query1 = "SET FOREIGN_KEY_CHECKS=0";
+		mysql_query($query1);
+
+		$query = "INSERT INTO hms_diseases (d_name) VALUES('$disease')";
+		$query2 = "SET FOREIGN_KEY_CHECKS=1";
+		mysql_query($query2);
+		$result = mysql_query($query) or die(mysql_error());
+		
+		if($result == 1){
+			?>
+				<script>
+					alert("Disease Added!");
+					window.location.href="diseases.php";
+				</script>
+				<?php
+			}
+		}
+	}
+
+	function get_disease_by_id($id){
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = "SELECT * FROM hms_diseases WHERE d_id=$id";
+
+		if(!$db->query($result)){
+				return false;
+			}
+
+		return $db -> fetch();
+	}
+
+	function edit_disease(){
+		$d_name = $_REQUEST['d_name'];
+        $id = $_REQUEST['d_id'];
+
+        if ($d_name == "") {
+			?>
+				<script>
+					alert("ERROR: Enter Name Of Disease!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+
+		$db = new adb();
+		$db -> connect();
+
+		$result = mysql_query("UPDATE hms_diseases SET d_name = '$d_name' WHERE d_id='$id'");
+		if($result === FALSE) { 
+		    die(mysql_error()); // TODO: better error handling
+		}
+
+        if ($result == 1) {
+            ?>
+                <script>
+                    alert("Disease Updated!");
+                    window.location.href="diseases.php";
+                </script>
+            <?php
+        	}
+        }
 	}
 
 	function add_district(){
@@ -254,25 +999,6 @@
 		echo "</select>";
 	}
 
-	function display_region_names(){
-		// $region_id = intval($_REQUEST["region_id"]);
-		// $region_name  = $_REQUEST["region_name"];
-
-		$db = new adb();
-		$db -> connect();
-
-		// $query = "SELECT region_id, region_name FROM regions";
-		$result = mysql_query("SELECT region_id, region_name FROM hms_regions ORDER BY region_name");
-		if($result === FALSE) { 
-		    die(mysql_error()); // TODO: better error handling
-		}
-		echo "<select name='region_ref' id='region_ref' class='form-control'>";
-		echo "<option>Region</option>";
-		while($row = mysql_fetch_array($result)){
-			echo "<option value=$row[region_name]>$row[region_name]</option>";
-		}
-		echo "</select>";
-	}
 
 	function add_sub_district(){
 		$sub_district_name  = $_REQUEST["sub_district_name"];
@@ -382,9 +1108,16 @@
 		$db = new adb();
 		$db -> connect();
 
-		$result = mysql_query("SELECT district_id, district_name, hms_regions.region_name 
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT district_id, district_name, hms_regions.region_name 
 								FROM hms_districts, hms_regions 
-								WHERE hms_districts.region_ref = hms_regions.region_id ORDER BY district_name");
+								WHERE hms_districts.region_ref = hms_regions.region_id ORDER BY district_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
+
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
@@ -412,6 +1145,22 @@
 		else{
         	echo "No Registered Districts were found.";
     	}
+
+    	$sql = "SELECT * FROM hms_districts"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='districts.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='districts.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='districts.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
 
 	}
 
@@ -486,9 +1235,15 @@
 		$db = new adb();
 		$db -> connect();
 
-		$result = mysql_query("SELECT sub_district_id, sub_district_name, hms_districts.district_name 
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT sub_district_id, sub_district_name, hms_districts.district_name 
 								FROM hms_sub_districts, hms_districts 
-								WHERE hms_sub_districts.district_ref = hms_districts.district_id ORDER BY sub_district_name");
+								WHERE hms_sub_districts.district_ref = hms_districts.district_id ORDER BY sub_district_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
@@ -516,6 +1271,22 @@
 		else{
         	echo "No Registered Sub-Districts were found.";
     	}
+
+    	$sql = "SELECT * FROM hms_sub_districts"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='sub_districts.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='sub_districts.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='sub_districts.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
 
 	}
 
@@ -594,9 +1365,16 @@
 		$db = new adb();
 		$db -> connect();
 
-		$result = mysql_query("SELECT o_id, o_system_id, o_fname, o_lname, hms_hospitals.h_name, o_contact 
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT o_id, o_system_id, o_fname, o_lname, hms_hospitals.h_name, o_contact 
 			FROM hms_officials, hms_hospitals 
-			WHERE hms_officials.o_health_center = hms_hospitals.h_id ORDER BY o_fname");
+			WHERE hms_officials.o_health_center = hms_hospitals.h_id ORDER BY o_fname LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
+
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
@@ -628,6 +1406,22 @@
 		else{
         	echo "No Registered Health Officials were found.";
     	}
+
+    	$sql = "SELECT * FROM hms_officials"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='health_officials.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='health_officials.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='health_officials.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
 
 	}
 
@@ -728,6 +1522,7 @@
 		return $db -> fetch();
 	}
 
+	//Function to register a new hospital
 	function register_hospital(){
 		$h_name  = $_REQUEST["h_name"];
 		$h_location  = $_REQUEST["h_location"];
@@ -821,7 +1616,13 @@
 		$db = new adb();
 		$db -> connect();
 
-		$result = mysql_query("SELECT h_id, h_name, h_location, h_contact FROM hms_hospitals ORDER BY h_name");
+		$num_rec_per_page=10;
+                
+                if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
+                $start_from = ($page-1) * $num_rec_per_page;
+
+                $sql = "SELECT h_id, h_name, h_location, h_contact FROM hms_hospitals ORDER BY h_name LIMIT $start_from, $num_rec_per_page"; 
+                $result = mysql_query ($sql); //run the query
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
@@ -851,6 +1652,22 @@
 		else{
         	echo "No Registered Hospitals were found.";
     	}
+
+    	$sql = "SELECT * FROM hms_hospitals"; 
+                    $rs_result = mysql_query($sql); //run the query
+                    $total_records = mysql_num_rows($rs_result);  //count number of records
+                    $total_pages = ceil($total_records / $num_rec_per_page); 
+
+                    echo "<center><nav><ul class='pagination pagination'>";
+                    echo "<li><a href='manage_hospitals.php?page=1' aria-label='Previous'>
+                    <span aria-hidden='true'>&laquo; First</span></a></li>"; // Goto 1st page  
+
+                    for ($i=1; $i<=$total_pages; $i++) { 
+                                echo "<li><a href='manage_hospitals.php?page=".$i."'>".$i."</a></li>"; 
+                    }; 
+                    echo "<li><a href='manage_hospitals.php?page=$total_pages' aria-label='Next'>
+                    <span aria-hidden='true'>Last &raquo;</span></a></li>   "; // Goto last page
+                    echo "</ul></nav></center>";
 
 	}
 

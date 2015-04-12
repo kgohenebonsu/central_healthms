@@ -39,17 +39,18 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="../index.php"><font size="5" color="#cdbfe3">Central~HealthMS Administrator</font></a>
+                <a class="navbar-brand" href="../"><font size="5" color="#cdbfe3">Central~HealthMS Administrator</font></a>
             </div>
         </div>
         <!-- /.container -->
     </nav><br><br><br><br>
 
-    <div class="container">    
+    <div class="container">
+
         <div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">                    
             <div class="panel panel-info">
                     <div class="panel-heading">
-                        <div class="panel-title">Login</div>
+                        <div class="panel-title">Administrator Login</div>
                         <center><div id="message">
                             
                         </div></center>
@@ -75,16 +76,18 @@
                                 <div style="margin-top:10px" class="form-group">
                                     <!-- Button -->
                                     <div class="col-sm-12 controls">
-                                        <button type="submit" class="btn btn-success">Login</button>
+                                        <button type="submit" class="btn btn-success">Login 
+                                            <i class="glyphicon glyphicon-log-in"></i></button>
                                       <!-- <a id="btn-login" href="#" class="btn btn-success">Login</a> -->
                                     </div>
                                 </div>    
-                            </form>     
+                            </form>
 
 
-
-                        </div>                     
-                    </div>  
+                        </div>                   
+                    </div><br>
+                    <a href="../"><i class="glyphicon glyphicon-backward">
+                        </i> Return to Health Officer Login</a>
         </div> 
     </div>
 </body>

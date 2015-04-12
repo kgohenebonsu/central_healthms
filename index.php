@@ -39,7 +39,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.php"><font size="5" color="#cdbfe3">Central~HealthMS</font></a>
+                <a class="navbar-brand" href="admin/"><font size="5" color="#cdbfe3">Central~HealthMS</font></a>
             </div>
         </div>
         <!-- /.container -->
@@ -77,16 +77,15 @@
                                 <div style="margin-top:10px" class="form-group">
                                     <!-- Button -->
                                     <div class="col-sm-12 controls">
-                                        <button type="submit" class="btn btn-success">Login</button>
+                                        <button type="submit" class="btn btn-success">Login <i class="glyphicon glyphicon-log-in"></i></button>
                                       <!-- <a id="btn-login" href="#" class="btn btn-success">Login</a> -->
                                     </div>
                                 </div>    
-                            </form>     
-
-
-
-                        </div>                     
-                    </div>  
+                            </form>
+                        </div>                
+                    </div>
+                    <br>
+                    <div align="right"><a href="admin/">Go to Administrator Login <i class="glyphicon glyphicon-forward"></i></a></div>
         </div> 
     </div>
 </body>

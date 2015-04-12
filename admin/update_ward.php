@@ -1,5 +1,5 @@
 <?php
-include 'health_action.php';
+    include 'health_action.php';
     session_start();
     if(!(isset($_SESSION['login']) && $_SESSION['login'] != '')) {
         header("Location: index.php");
@@ -17,7 +17,7 @@ include 'health_action.php';
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Central~HealthMS | Sub-Districts</title>
+    <title>Central~HealthMS | Districts</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -60,18 +60,6 @@ include 'health_action.php';
             </div>
             <!-- Top Menu Items -->
             <ul class="nav navbar-right top-nav">
-                <li>
-                    <div align="right">
-                            <form align="right" action='search_sub_district.php' method="POST" enctype="multipart/form-data" class="navbar-form" role="search">
-                            <div class="input-group add-on">
-                              <input style="min-width:300px; max-width:300px;" type="text" class="form-control" placeholder="Search by Sub-District name..." name="search" id="search">
-                              <div class="input-group-btn">
-                                <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
-                              </div>
-                            </div>
-                          </form>
-                </div>
-                </li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         <div style="color:white;"><i class="fa fa-user"></i> Welcome, 
@@ -90,34 +78,6 @@ include 'health_action.php';
                     </ul>
                 </li>
             </ul>
-            <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
-            <div class="collapse navbar-collapse navbar-ex1-collapse">
-                <ul class="nav navbar-nav side-nav">
-                    <li>
-                        <a href="dashboard.php"><div style="color:white;">
-                            <i class="fa fa-fw fa-dashboard"></i> Dashboard</div></a>
-                    </li>
-                    <li>
-                        <a href="manage_hospitals.php"><div style="color:white;"><i class="fa fa-fw fa-edit">
-                        </i> Manage Hospitals</div></a>
-                    </li>
-                    <li>
-                        <a href="health_officials.php"><div style="color:white;"><i class="fa fa-fw fa-edit">
-                        </i> Manage Health Officials</div></a>
-                    </li>
-                    <li>
-                        <a href="districts.php"><div style="color:white;"><i class="fa fa-fw fa-desktop">
-                        </i> Districts</div></a>
-                    </li>
-                    <li style="background-color: #663399;">
-                        <a href="sub_districts.php"><div style="color:white;"><i class="fa fa-fw fa-desktop">
-                        </i> Sub-Districts</div></a>
-                    </li>
-                    <li>
-                        <a href="settings.php"><div style="color:white;"><i class="fa fa-fw fa-gear">
-                        </i> System Settings</div></a>
-                    </li>
-                </ul>
             </div>
             <!-- /.navbar-collapse -->
         </nav>
@@ -130,29 +90,39 @@ include 'health_action.php';
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            Sub-Districts <small></small>
+                            Update Ward <small></small>
                         </h1>
                     </div>
                 </div>
+                <?php
+                    $id = null;
+                    if (isset($_REQUEST['id'])) {
+                        $id = $_REQUEST['id'];
+                        $row = get_ward_by_id($id);
+                    }
+                    
 
+                ?>
                 <div class="row">
-                    <div class="col-lg-9">
-                        <?php
-                        see_all_sub_districts();
-                        ?>
+                    <div class="col-lg-4">
+                        <h4><a href="wards.php">Return To List</a></h4>
                     </div>
-                    <div class="col-lg-3">
+                    <div class="col-lg-4">
                         <br><br>
-                        <form action='health_action.php?add_sub_district' method='POST' class='form-horizontal'>
+                        <form action='health_action.php?edit_ward' method='POST' class='form-horizontal'>
                             <div class='input-group'>
-                              <span class='input-group-addon' id='basic-addon1'>Sub-District Name</span>
-                              <input type='text' class='form-control' name='sub_district_name' id='sub_district_name' placeholder='sub-district' aria-describedby='basic-addon1'>
-                            </div>
-                            <center><h3>IN</h3></center>
-                            <?php
-                            display_districts();?><br>
-                            <button type='submit' name='submit' class='btn btn-success'>Add Sub-District</button>
+                              <span class='input-group-addon' id='basic-addon1'>Ward</span>
+                              <input type='text' class='form-control' name='ward_name' id='ward_name' 
+                              value="<?php echo $row['ward_name'] ?>" placeholder='' aria-describedby='basic-addon1'>
+
+                              <input type='hidden' class='form-control' name='ward_id' id='ward_id' 
+                              value="<?php echo $row['ward_id'] ?>" aria-describedby='basic-addon1'>
+
+                            </div><br>
+                            <button type='submit' name='submit' class='btn btn-success'>Update Ward</button>
                         </form>
+                    </div>
+                    <div class="col-lg-4">
                     </div>
                 </div>
 

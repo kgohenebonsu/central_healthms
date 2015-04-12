@@ -1,5 +1,5 @@
 <?php
-include 'health_action.php';
+include_once 'health_action.php';
     session_start();
     if(!(isset($_SESSION['login']) && $_SESSION['login'] != '')) {
         header("Location: index.php");
@@ -17,7 +17,7 @@ include 'health_action.php';
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Central~HealthMS | Sub-Districts</title>
+    <title>Central~HealthMS | Dashboard</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -60,18 +60,6 @@ include 'health_action.php';
             </div>
             <!-- Top Menu Items -->
             <ul class="nav navbar-right top-nav">
-                <li>
-                    <div align="right">
-                            <form align="right" action='search_sub_district.php' method="POST" enctype="multipart/form-data" class="navbar-form" role="search">
-                            <div class="input-group add-on">
-                              <input style="min-width:300px; max-width:300px;" type="text" class="form-control" placeholder="Search by Sub-District name..." name="search" id="search">
-                              <div class="input-group-btn">
-                                <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
-                              </div>
-                            </div>
-                          </form>
-                </div>
-                </li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         <div style="color:white;"><i class="fa fa-user"></i> Welcome, 
@@ -109,11 +97,11 @@ include 'health_action.php';
                         <a href="districts.php"><div style="color:white;"><i class="fa fa-fw fa-desktop">
                         </i> Districts</div></a>
                     </li>
-                    <li style="background-color: #663399;">
+                    <li>
                         <a href="sub_districts.php"><div style="color:white;"><i class="fa fa-fw fa-desktop">
                         </i> Sub-Districts</div></a>
                     </li>
-                    <li>
+                    <li style="background-color: #663399;">
                         <a href="settings.php"><div style="color:white;"><i class="fa fa-fw fa-gear">
                         </i> System Settings</div></a>
                     </li>
@@ -130,36 +118,33 @@ include 'health_action.php';
                 <div class="row">
                     <div class="col-lg-12">
                         <h1 class="page-header">
-                            Sub-Districts <small></small>
+                            System Settings <small>Consulting Rooms</small>
                         </h1>
                     </div>
                 </div>
 
                 <div class="row">
-                    <div class="col-lg-9">
-                        <?php
-                        see_all_sub_districts();
-                        ?>
-                    </div>
                     <div class="col-lg-3">
-                        <br><br>
-                        <form action='health_action.php?add_sub_district' method='POST' class='form-horizontal'>
-                            <div class='input-group'>
-                              <span class='input-group-addon' id='basic-addon1'>Sub-District Name</span>
-                              <input type='text' class='form-control' name='sub_district_name' id='sub_district_name' placeholder='sub-district' aria-describedby='basic-addon1'>
-                            </div>
-                            <center><h3>IN</h3></center>
-                            <?php
-                            display_districts();?><br>
-                            <button type='submit' name='submit' class='btn btn-success'>Add Sub-District</button>
-                        </form>
+                        <h4><a href="settings.php">Return To Settings</a></h4>
                     </div>
-                </div>
+                    <div class="col-lg-5">
+                        <?php
 
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div style="min-height: 50px">
-                        </div>
+                            see_all_rooms();
+
+                        ?>
+                    
+                    </div>
+
+                    <div class="col-lg-4">
+                        <h4 align="right">Add New Room</h4>
+                        <form action='health_action.php?add_room' method='POST' class='form-horizontal'>
+                            <div class='input-group'>
+                              <span class='input-group-addon' id='basic-addon1'>Consulting Room</span>
+                              <input type='text' class='form-control' name='room' id='room' placeholder='' aria-describedby='basic-addon1'>
+                            </div><br>
+                            <div align="right"><button type='submit' name='submit' class='btn btn-success'>Submit</button></div>
+                        </form>
                     </div>
                 </div>
 
