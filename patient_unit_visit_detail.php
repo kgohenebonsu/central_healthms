@@ -115,6 +115,7 @@
                     <div class="col-lg-6">
                         <br><br>
                         <?php
+                        
                             echo "<b>Last Visit Update: " . $row['last_update'] . "</b>";
                             echo "<br><br>";
                             echo "<h4>" . $row['h_name'] . " <small> " . $row['room_name'] . "</small></h4>";
@@ -140,7 +141,10 @@
                             echo "Test Results: " . $row['test_results'];
                             echo "<br>";
                             echo "<br>";
-                            echo "Diagnosis: " . $row['diagnosis'] . " ... in summary, ". $row['d_name'];
+                            echo "Other Comments: " . $row['other_comments'];
+                            echo "<br>";
+                            echo "<br>";
+                            echo "Diagnosis: " . $row['d_name'];
                             echo "<br>";
                             echo "<br>";
                             echo "Prescription: " . $row['prescription'];

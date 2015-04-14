@@ -157,7 +157,8 @@ include_once 'health_action.php';
 
                         }
                             if(isset($_REQUEST['search'])){
-                                $search = $_REQUEST['search'];
+                                $search = filter_input(INPUT_POST, "search", FILTER_SANITIZE_STRING);
+                                // $_REQUEST['search'];
                             $result=$obj->search_patient($search);
 
                             

@@ -1,6 +1,7 @@
 <?php
 include_once 'health_action.php';
     session_start();
+    ob_start();
     if(!(isset($_SESSION['login']) && $_SESSION['login'] != '')) {
         header("Location: index.php");
     }
@@ -144,9 +145,14 @@ include_once 'health_action.php';
                               <span class='input-group-addon' id='basic-addon1'>TO</span>
                               <input type='date' class='form-control' name='to' id='to' placeholder='' aria-describedby='basic-addon1'>
                             </div><br>
+                            <div class="checkbox">
+                                <label>
+                                  <input name="export" id="export" type="checkbox"> Export to Excel Sheet
+                                </label>
+                              </div><br>
                             <input type='hidden' class='form-control' name='id' id='id' 
                               value="<?php echo $_SESSION['h_id']; ?>" aria-describedby='basic-addon1'>
-                            <button type='submit' name='submit' class='btn btn-info'>View Statistics</button>
+                            <button type='submit' name='submit' class='btn btn-info'>Generate Statistics</button>
                         </form>
                         <?php
                             include("health_functions.php");
@@ -157,7 +163,7 @@ include_once 'health_action.php';
                              exit();
 
                         }
-                            if(isset($_REQUEST['id'])){
+                            if(isset($_REQUEST['region_ref'])){
                                 $region  = $_REQUEST["region_ref"];
                                 $from  = $_REQUEST["from"];
                                 $to  = $_REQUEST["to"];
@@ -168,7 +174,7 @@ include_once 'health_action.php';
 
                             if ($from == "" || $to == "" || $region == "") {
                                 echo "<br><br>";
-                                echo "<center>Enter Valid Dates or Region To View Statistics</center>";
+                                echo "<center>Enter Valid Dates and Region To View Statistics</center>";
                             }
 
                             else if ($result == null) {
@@ -177,6 +183,13 @@ include_once 'health_action.php';
                             }
 
                             else {
+
+                                if (isset($_POST['export'])) {
+                                    //Export
+                                        header("Location: export.php?region_ref=$region&from=$from&to=$to");
+
+                                    }
+                                    else {
 
                                 echo "<br><br>";
                                 echo "<center><h5>Health Cases That Were Recorded Between <b>" . $from . "</b> and <b>" . $to . "</b></h5></center>";
@@ -200,6 +213,7 @@ include_once 'health_action.php';
                             }
                             echo "</tbody>
                                 </table>";
+                            }
                         }
 
                     }

@@ -135,14 +135,20 @@
 
 
 	function login(){
-		$username = $_REQUEST["username"];
-		$password = $_REQUEST["password"];
+		$username = trim(htmlentities($_REQUEST["username"]));
+		$password = trim(htmlentities($_REQUEST["password"]));
+
+		$pass = sha1($password);
+		$salt = md5("centralhealthmsadminlogin");
+		$pepper = "ikyhtgtbhfdsfsqwnk";
+
+		$thePass = $salt . $pass . $pepper;
 
 		$db = new adb();
 		$db -> connect();
 
 
-		$query = "select o_username,o_fullname, o_password from hms_officials where o_username='$username' and o_password=MD5('$password')";
+		$query = "SELECT o_username,o_fullname, o_password FROM hms_officials WHERE o_username='$username' AND o_password=MD5('$password')";
 
 		$result = mysql_query($query) or die(mysql_error());
 		$num_rows = mysql_num_rows($result);
@@ -164,7 +170,7 @@
 			else{
 				?>
 				<script>
-					alert("username or password is incorrect");
+					alert("username or password is INVALID!");
 			      window.history.back();
 				</script>
 				<?php
@@ -173,17 +179,34 @@
 			}
 		}
 
+		else {
+			?>
+				<script>
+			      alert("username or password is INVALID!");
+			      window.history.back();
+				</script>
+				<?php
+		}
+
 	}
 
 	function admin_login(){
-		$username = $_REQUEST["username"];
-		$password = $_REQUEST["password"];
+		$username = trim(htmlentities($_REQUEST["username"]));
+		$password = trim(htmlentities($_REQUEST["password"]));
+
+		$pass = sha1($password);
+		$salt = md5("centralhealthmsadminlogin");
+		$pepper = "ikyhtgtbhfdsfsqwnk";
+
+		$thePass = $salt . $pass . $pepper; 
 
 		$db = new adb();
 		$db -> connect();
 
 
-		$query = "select a_name,a_fullname, a_password from hms_admins where a_name='$username' and a_password=MD5('$password')";
+		$query = "SELECT a_name,a_fullname, a_password 
+					FROM hms_admins WHERE a_name= '$username' 
+					AND a_password=MD5('$password')";
 
 		$result = mysql_query($query) or die(mysql_error());
 		$num_rows = mysql_num_rows($result);
@@ -205,13 +228,22 @@
 			else{
 				?>
 				<script>
-			      alert("username or password is incorrect");
+			      alert("username or password is INVALID!");
 			      window.history.back();
 				</script>
 				<?php
 				// $msg="username or password is incorrect";
 
 			}
+		}
+
+		else {
+			?>
+				<script>
+			      alert("username or password is INVALID!");
+			      window.history.back();
+				</script>
+				<?php
 		}
 
 	}
@@ -272,8 +304,10 @@
 	}
 
 	function add_medicine(){
-		$medicine  = $_REQUEST["medicine"];
-		$description  = $_REQUEST["description"];
+		$medicine  = filter_input(INPUT_POST, "medicine", FILTER_SANITIZE_STRING);
+		// $_REQUEST["medicine"];
+		$description  = filter_input(INPUT_POST, "description", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["description"];
 
 		if ($medicine == "" || $description == "") {
 			?>
@@ -323,8 +357,10 @@
 	}
 
 	function edit_medicine(){
-		$med_name = $_REQUEST['med_name'];
-		$description = $_REQUEST['description'];
+		$med_name = filter_input(INPUT_POST, "med_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST['med_name'];
+		$description = filter_input(INPUT_POST, "description", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST['description'];
         $id = $_REQUEST['m_id'];
 
         if ($med_name == "" || $description == "") {
@@ -411,7 +447,8 @@
 	}
 
 	function add_payment_mode(){
-		$pm_name  = $_REQUEST["pm_name"];
+		$pm_name  = filter_input(INPUT_POST, "pm_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST["pm_name"];
 
 		if ($pm_name == "") {
 			?>
@@ -461,7 +498,8 @@
 	}
 
 	function edit_payment_mode(){
-		$pm_name = $_REQUEST['pm_name'];
+		$pm_name = filter_input(INPUT_POST, "pm_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST['pm_name'];
         $id = $_REQUEST['pm_id'];
 
         if ($pm_name == "") {
@@ -548,7 +586,8 @@
 	}
 
 	function add_ward(){
-		$ward_name  = $_REQUEST["ward_name"];
+		$ward_name  = filter_input(INPUT_POST, "ward_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST["ward_name"];
 
 		if ($ward_name == "") {
 			?>
@@ -598,7 +637,8 @@
 	}
 
 	function edit_ward(){
-		$ward_name = $_REQUEST['ward_name'];
+		$ward_name = filter_input(INPUT_POST, "ward_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST['ward_name'];
         $id = $_REQUEST['ward_id'];
 
         if ($ward_name == "") {
@@ -685,7 +725,8 @@
 	}
 
 	function add_room(){
-		$room  = $_REQUEST["room"];
+		$room  = filter_input(INPUT_POST, "room", FILTER_SANITIZE_STRING);
+		// $_REQUEST["room"];
 
 		if ($room == "") {
 			?>
@@ -735,7 +776,8 @@
 	}
 
 	function edit_room(){
-		$room_name = $_REQUEST['room_name'];
+		$room_name = filter_input(INPUT_POST, "room_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST['room_name'];
         $id = $_REQUEST['room_id'];
 
         if ($room_name == "") {
@@ -826,8 +868,10 @@
 		$db = new adb();
 		$db -> connect();
 
-		$result = mysql_query("SELECT hms_diseases.d_name, count(hms_diseases.d_name) as `num_cases` FROM hms_patient_visits
-								INNER JOIN hms_diseases ON (hms_diseases.d_id=hms_patient_visits.disease)
+		$result = mysql_query("SELECT hms_diseases.d_id, hms_diseases.d_name, count(hms_diseases.d_name) as `num_cases` 
+								FROM hms_patient_visits
+								INNER JOIN hms_diseases 
+								ON FIND_IN_SET(hms_diseases.d_id, hms_patient_visits.disease) <> 0
 								WHERE date_of_input=CURDATE()
 								GROUP BY hms_diseases.d_name");
 		if($result === FALSE) { 
@@ -835,6 +879,7 @@
 		}
 
 		if(mysql_num_rows($result) > 0){
+			echo "<center><h4>All Recorded Cases For Today!</h4></center>";
         echo "<table class='table table-striped'>";
             echo "<thead><tr>";
                 echo "<th>DISEASE</th>";
@@ -859,7 +904,8 @@
 	}
 
 	function add_disease(){
-		$disease  = $_REQUEST["disease"];
+		$disease  = filter_input(INPUT_POST, "disease", FILTER_SANITIZE_STRING);
+		// $_REQUEST["disease"];
 
 		if ($disease == "") {
 			?>
@@ -909,7 +955,8 @@
 	}
 
 	function edit_disease(){
-		$d_name = $_REQUEST['d_name'];
+		$d_name = filter_input(INPUT_POST, "d_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST['d_name'];
         $id = $_REQUEST['d_id'];
 
         if ($d_name == "") {
@@ -943,7 +990,8 @@
 	}
 
 	function add_district(){
-		$district_name  = $_REQUEST["district_name"];
+		$district_name  = filter_input(INPUT_POST, "district_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST["district_name"];
 		$region_ref  = $_REQUEST["region_ref"];
 
 		if ($region_ref == "" || $region_ref == 0) {
@@ -1001,7 +1049,8 @@
 
 
 	function add_sub_district(){
-		$sub_district_name  = $_REQUEST["sub_district_name"];
+		$sub_district_name  = filter_input(INPUT_POST, "sub_district_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST["sub_district_name"];
 		$district_ref  = $_REQUEST["district_ref"];
 
 		if ($district_ref == "" || $district_ref == 0) {
@@ -1055,7 +1104,8 @@
 	}
 
 	function edit_districts(){
-		$d_name = $_REQUEST['district_name'];
+		$d_name = filter_input(INPUT_POST, "district_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST['district_name'];
         $reg_ref = $_REQUEST['region_ref'];
         $id = $_REQUEST['district_id'];
 
@@ -1182,7 +1232,8 @@
 	}
 
 	function edit_sub_districts(){
-		$sub_name = $_REQUEST['sub_district_name'];
+		$sub_name = filter_input(INPUT_POST, "sub_district_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST['sub_district_name'];
         $dis_ref = $_REQUEST['district_ref'];
         $id = $_REQUEST['sub_district_id'];
 
@@ -1291,21 +1342,21 @@
 	}
 
 	function register_official(){
-		$o_fname  = $_REQUEST["o_fname"];
-		$o_lname  = $_REQUEST["o_lname"];
-		$o_password1  = $_REQUEST["o_password1"];
-		$o_password2  = $_REQUEST["o_password2"];
-		$o_position  = $_REQUEST["o_position"];
+		$o_fname  = filter_input(INPUT_POST, "o_fname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_fname"];
+		$o_lname  = filter_input(INPUT_POST, "o_lname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_lname"];
+		$o_password1  = filter_input(INPUT_POST, "o_password1", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_password1"];
+		$o_password2  = filter_input(INPUT_POST, "o_password2", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_password2"];
+		$o_position  = filter_input(INPUT_POST, "o_position", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_position"];
 		$o_health_center  = $_REQUEST["o_health_center"];
-		$o_contact  = $_REQUEST["o_contact"];
-		$o_email  = $_REQUEST["o_email"];
-
-		$pin = mt_rand(1000,9999);
-		$thefname = strtolower($o_fname);
-		$onefname = $thefname[0];
-		$thelname = strtolower($o_lname);
-		$o_username = $onefname."".$thelname;
-		$o_system_id = $onefname."".$thelname."".$pin;
+		$o_contact  = filter_input(INPUT_POST, "o_contact", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_contact"];
+		$o_email  = filter_input(INPUT_POST, "o_email", FILTER_SANITIZE_EMAIL);
+		// $_REQUEST["o_email"];
 
 		if ($o_password1 != $o_password2){
 			?>
@@ -1326,6 +1377,13 @@
 				<?php
 		}
 		else {
+
+			$pin = mt_rand(1000,9999);
+		$thefname = strtolower($o_fname);
+		$onefname = $thefname[0];
+		$thelname = strtolower($o_lname);
+		$o_username = $onefname."".$thelname;
+		$o_system_id = $onefname."".$thelname."".$pin;
 
 		$db = new adb();
 		$db -> connect();
@@ -1428,21 +1486,22 @@
 	function edit_health_official(){
 		if (isset($_POST['submit'])) {
 		$id = $_REQUEST['id'];
-		$o_fname  = $_REQUEST["o_fname"];
-		$o_lname  = $_REQUEST["o_lname"];
-		$o_password1  = $_REQUEST["o_password1"];
-		$o_password2  = $_REQUEST["o_password2"];
-		$o_position  = $_REQUEST["o_position"];
-		$o_health_center  = $_REQUEST["o_health_center"];
-		$o_contact  = $_REQUEST["o_contact"];
-		$o_email  = $_REQUEST["o_email"];
 
-		$pin = mt_rand(1000,9999);
-		$thefname = strtolower($o_fname);
-		$onefname = $thefname[0];
-		$thelname = strtolower($o_lname);
-		$o_username = $onefname."".$thelname;
-		$o_system_id = $onefname."".$thelname."".$pin;
+		$o_fname  = filter_input(INPUT_POST, "o_fname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_fname"];
+		$o_lname  = filter_input(INPUT_POST, "o_lname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_lname"];
+		$o_password1  = filter_input(INPUT_POST, "o_password1", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_password1"];
+		$o_password2  = filter_input(INPUT_POST, "o_password2", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_password2"];
+		$o_position  = filter_input(INPUT_POST, "o_position", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_position"];
+		$o_health_center  = $_REQUEST["o_health_center"];
+		$o_contact  = filter_input(INPUT_POST, "o_contact", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_contact"];
+		$o_email  = filter_input(INPUT_POST, "o_email", FILTER_SANITIZE_EMAIL);
+		// $_REQUEST["o_email"];
 
 		if ($o_password1 != $o_password2){
 			?>
@@ -1472,6 +1531,13 @@
 				<?php
 		}
 		else {
+
+			$pin = mt_rand(1000,9999);
+		$thefname = strtolower($o_fname);
+		$onefname = $thefname[0];
+		$thelname = strtolower($o_lname);
+		$o_username = $onefname."".$thelname;
+		$o_system_id = $onefname."".$thelname."".$pin;
 
 		$db = new adb();
 		$db -> connect();
@@ -1524,14 +1590,19 @@
 
 	//Function to register a new hospital
 	function register_hospital(){
-		$h_name  = $_REQUEST["h_name"];
-		$h_location  = $_REQUEST["h_location"];
+		$h_name  = filter_input(INPUT_POST, "h_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST["h_name"];
+		$h_location  = filter_input(INPUT_POST, "h_location", FILTER_SANITIZE_STRING);
+		// $_REQUEST["h_location"];
 		$h_sub_district  = $_REQUEST["sub_district_ref"];
 		$h_district  = $_REQUEST["district_ref"];
 		$h_region  = $_REQUEST["region_ref"];
-		$h_address  = $_REQUEST["h_address"];
-		$h_contact  = $_REQUEST["h_contact"];
-		$h_email  = $_REQUEST["h_email"];
+		$h_address  = filter_input(INPUT_POST, "h_address", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["h_address"];
+		$h_contact  = filter_input(INPUT_POST, "h_contact", FILTER_SANITIZE_STRING);
+		// $_REQUEST["h_contact"];
+		$h_email  = filter_input(INPUT_POST, "h_email", FILTER_SANITIZE_EMAIL);
+		// $_REQUEST["h_email"];
 
 		if ($h_sub_district == "" || $h_sub_district == 0){
 			?>
@@ -1693,14 +1764,20 @@
 	function edit_hospital(){
 		if (isset($_POST['submit'])) {
 			$id = $_REQUEST['id'];
-		$h_name  = $_REQUEST["h_name"];
-		$h_location  = $_REQUEST["h_location"];
+
+		$h_name  = filter_input(INPUT_POST, "h_name", FILTER_SANITIZE_STRING);
+		// $_REQUEST["h_name"];
+		$h_location  = filter_input(INPUT_POST, "h_location", FILTER_SANITIZE_STRING);
+		// $_REQUEST["h_location"];
 		$h_sub_district  = $_REQUEST["sub_district_ref"];
 		$h_district  = $_REQUEST["district_ref"];
 		$h_region  = $_REQUEST["region_ref"];
-		$h_address  = $_REQUEST["h_address"];
-		$h_contact  = $_REQUEST["h_contact"];
-		$h_email  = $_REQUEST["h_email"];
+		$h_address  = filter_input(INPUT_POST, "h_address", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["h_address"];
+		$h_contact  = filter_input(INPUT_POST, "h_contact", FILTER_SANITIZE_STRING);
+		// $_REQUEST["h_contact"];
+		$h_email  = filter_input(INPUT_POST, "h_email", FILTER_SANITIZE_EMAIL);
+		// $_REQUEST["h_email"];
 
 		if ($h_sub_district == "" || $h_sub_district == 0){
 			?>

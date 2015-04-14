@@ -69,11 +69,11 @@
 		}
 
 		function see_some_cases($region,$from,$to){
-		$query="SELECT hms_diseases.d_name, hms_hospitals.h_name, hms_hospitals.h_region, 
+		$query="SELECT hms_diseases.d_id, hms_diseases.d_name, hms_hospitals.h_name, hms_hospitals.h_region, 
 					hms_patient_visits.date_of_input, hms_regions.region_name as 'regions', count(hms_diseases.d_name) as 'num_cases' 
 					FROM hms_patient_visits
 					INNER JOIN hms_hospitals ON (hms_hospitals.h_id=hms_patient_visits.hospital_id)
-					INNER JOIN hms_diseases ON (hms_diseases.d_id=hms_patient_visits.disease)
+					INNER JOIN hms_diseases ON FIND_IN_SET(hms_diseases.d_id, hms_patient_visits.disease) <> 0
 					INNER JOIN hms_regions ON (hms_regions.region_id=hms_hospitals.h_region)
 					WHERE hms_hospitals.h_region='$region'
 					AND hms_patient_visits.date_of_input >= '$from' AND hms_patient_visits.date_of_input <= '$to'

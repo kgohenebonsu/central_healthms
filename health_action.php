@@ -101,15 +101,24 @@
 	
 
 	function login(){
-		$username = $_REQUEST["username"];
-		$password = $_REQUEST["password"];
+		$username = trim(htmlentities($_REQUEST["username"]));
+		$password = trim(htmlentities($_REQUEST["password"]));
+
+		$pass = sha1($password);
+		$salt = md5("centralhealthmslogin");
+		$pepper = "ikyhtgtbhfdsfsqwnk";
+
+		$thePass = $salt . $pass . $pepper;
 
 		$db = new adb();
 		$db -> connect();
 
 
-		$query = "select o_id, o_username, o_fname, o_lname, o_password, hms_hospitals.h_name, hms_hospitals.h_id  from hms_officials, hms_hospitals
-				where hms_officials.o_health_center=hms_hospitals.h_id and o_username='$username' and o_password=MD5('$password')";
+		$query = "SELECT o_id, o_username, o_fname, o_lname, o_password, hms_hospitals.h_name, hms_hospitals.h_id  
+					FROM hms_officials, hms_hospitals
+					WHERE hms_officials.o_health_center=hms_hospitals.h_id 
+					AND o_username='$username'
+					AND o_password=MD5('$password')";
 
 		$result = mysql_query($query) or die(mysql_error());
 		$num_rows = mysql_num_rows($result);
@@ -134,7 +143,7 @@
 			else{
 				?>
 				<script>
-					alert("username or password is incorrect");
+					alert("username or password is INVALID!");
 			      window.history.back();
 				</script>
 				<?php
@@ -143,6 +152,16 @@
 			}
 		}
 
+		else{
+				?>
+				<script>
+					alert("username or password is INVALID!");
+			      window.history.back();
+				</script>
+				<?php
+
+			}
+
 	}
 
 	function see_all_hospital_cases($id){
@@ -150,14 +169,101 @@
 		$db = new adb();
 		$db -> connect();
 
-		$result = mysql_query("SELECT hms_diseases.d_name, hms_hospitals.h_name, count(hms_diseases.d_name) as 'num_cases' 
+		$result = mysql_query("SELECT hms_diseases.d_id,hms_diseases.d_name, hms_hospitals.h_name, 
+								count(hms_patient_visits.disease) as 'num_cases' 
+								FROM hms_patient_visits
+								INNER JOIN hms_hospitals ON (hms_hospitals.h_id=hms_patient_visits.hospital_id)
+								INNER JOIN hms_diseases 
+								ON FIND_IN_SET(hms_diseases.d_id, hms_patient_visits.disease) <> 0
+								WHERE date_of_input=CURDATE() AND hms_patient_visits.hospital_id= '$id'
+								GROUP BY hms_diseases.d_name");
+		if($result === FALSE) { 
+		    die(mysql_error()); // TODO: better error handling
+		}
+
+		if(mysql_num_rows($result) > 0){
+			echo "<center><h4>Recorded Cases For Today!</h4></center>";
+        echo "<table class='table table-striped'>";
+            echo "<thead><tr>";
+                echo "<th>DISEASE</th>";
+                echo "<th>NUMBER OF CASES</th>";
+            echo "</tr></thead>";
+		    echo "<tbody>";
+
+		while($row = mysql_fetch_array($result)){
+			echo "<tr>";
+			echo "<td>" . $row["d_name"] . "</td>";
+			echo "<td>" . $row['num_cases'] . "</td>";
+			echo "</tr>";
+			
+		}
+		echo "</tbody>
+			</table>";
+			mysql_free_result($result);
+		}
+
+		else{
+        	echo "<center><h4>No Health Cases Have Been Recorded At This Health Center Today!</h4></center>";
+    	}
+
+	}
+
+	//Not Used
+	function see_some_hospital_cases(){
+		if (isset($_POST['submit'])) {
+		$id  = $_REQUEST["id"];
+		$from  = $_REQUEST["from"];
+		$to  = $_REQUEST["to"];
+
+		$db = new adb();
+		$db -> connect();
+
+		if (isset($_POST['export'])) {
+			//Export and Display
+
+			$result = mysql_query("SELECT hms_diseases.d_name, hms_hospitals.h_name, hms_patient_visits.date_of_input, count(hms_diseases.d_name) as 'num_cases' 
 								FROM hms_patient_visits
 								INNER JOIN hms_hospitals ON (hms_hospitals.h_id=hms_patient_visits.hospital_id)
 								INNER JOIN hms_diseases ON (hms_diseases.d_id=hms_patient_visits.disease)
-								WHERE date_of_input=CURDATE() AND hms_patient_visits.hospital_id= '$id'
+								WHERE hms_patient_visits.date_of_input >= '$from' AND hms_patient_visits.date_of_input <= '$to'
+								AND hms_patient_visits.hospital_id= '$id'
 								GROUP BY hms_diseases.d_name AND hms_hospitals.h_name");
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
+		}
+
+		$xls_filename = 'health_stats_for_'.date('Y-m-d').'.xls'; // Define Excel (.xls) file name
+		
+		echo "header('Content-Type: application/xls')";
+		echo "header('Content-Disposition: attachment; filename=$xls_filename')";
+		echo "header('Pragma: no-cache')";
+		echo "header('Expires: 0')";
+
+		for ($i = 0; $i<mysql_num_fields($result); $i++) {
+			  echo mysql_field_name($result, $i) . "\t";
+			}
+
+		print("\n");
+
+		while($row = mysql_fetch_row($result)) {
+		  $schema_insert = "";
+		  for($j=0; $j<mysql_num_fields($result); $j++)
+		  {
+		    if(!isset($row[$j])) {
+		      $schema_insert .= "NULL".$sep;
+		    }
+		    elseif ($row[$j] != "") {
+		      $schema_insert .= "$row[$j]".$sep;
+		    }
+		    else {
+		      $schema_insert .= "".$sep;
+		    }
+		  }
+		  $schema_insert = str_replace($sep."$", "", $schema_insert);
+		  $schema_insert = preg_replace("/\r\n|\n\r|\n|\r/", " ", $schema_insert);
+		  $schema_insert .= "\t";
+		  print(trim($schema_insert));
+		  print "\n";
 		}
 
 		if(mysql_num_rows($result) > 0){
@@ -178,22 +284,15 @@
 			mysql_free_result($result);
 		}
 
-		else{
-        	echo "<center><h4>No Health Cases Have Been Recorded At This Health Center Today!</h4></center>";
-    	}
+			else{
+        	echo "<center><h4>No Health Cases Were Recorded Between <b>" . $from . "</b> and <b>" . $to . "</b> </h4></center>";
+    			}
+    		}
 
-	}
+    		else {
 
-	function see_some_hospital_cases(){
-		if (isset($_POST['submit'])) {
-		$id  = $_REQUEST["id"];
-		$from  = $_REQUEST["from"];
-		$to  = $_REQUEST["to"];
-
-		$db = new adb();
-		$db -> connect();
-
-		$result = mysql_query("SELECT hms_diseases.d_name, hms_hospitals.h_name, hms_patient_visits.date_of_input, count(hms_diseases.d_name) as 'num_cases' 
+    			// Display Only
+    			$result = mysql_query("SELECT hms_diseases.d_name, hms_hospitals.h_name, hms_patient_visits.date_of_input, count(hms_diseases.d_name) as 'num_cases' 
 								FROM hms_patient_visits
 								INNER JOIN hms_hospitals ON (hms_hospitals.h_id=hms_patient_visits.hospital_id)
 								INNER JOIN hms_diseases ON (hms_diseases.d_id=hms_patient_visits.disease)
@@ -224,32 +323,48 @@
 
 			else{
         	echo "<center><h4>No Health Cases Were Recorded Between <b>" . $from . "</b> and <b>" . $to . "</b> </h4></center>";
+    			}
     		}
     	}
 	}
 
 	//Function to register new patient
 	function register_patient(){
-		$fname  = $_REQUEST["fname"];
-		$lname  = $_REQUEST["lname"];
+		$fname  = filter_input(INPUT_POST, "fname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["fname"];
+		$lname  = filter_input(INPUT_POST, "lname", FILTER_SANITIZE_STRING);
+		//$_REQUEST["lname"];
 		$gender  = $_REQUEST["gender"];
 		$birthDate  = $_REQUEST["birthDate"];
-		$address  = $_REQUEST["address"];
+		$address  = filter_input(INPUT_POST, "address", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["address"];
 		$nationality  = $_REQUEST["nationality"];
 		$region  = $_REQUEST["region_ref"];
 		$district  = $_REQUEST["district_ref"];
 		$sub_district  = $_REQUEST["sub_district_ref"];
-		$contact  = $_REQUEST["contact"];
-		$email  = $_REQUEST["email"];
+		$contact  = filter_input(INPUT_POST, "contact", FILTER_SANITIZE_STRING);
+		// $_REQUEST["contact"];
+		$email  = filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL);
+		// $_REQUEST["email"];
 
-		$pin = mt_rand(100000,999999);
+		$db = new adb();
+		$db -> connect();
+
+		if ($fname == "" || $lname == "" || $gender == "" || $birthDate == "" || $contact == "") {
+			?>
+				<script>
+					alert("ERROR: Make sure all fields are filled!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+			$pin = mt_rand(100000,999999);
 		$thefname = strtolower($fname);
 		$onefname = $thefname[0];
 		$thelname = strtolower($lname);
 		$patient_system_id = $onefname."".$thelname."".$pin;
-
-		$db = new adb();
-		$db -> connect();
 
 		$query1 = "SET FOREIGN_KEY_CHECKS=0";
 		mysql_query($query1);
@@ -261,6 +376,16 @@
 		$result = mysql_query($query) or die(mysql_error());
 		
 		if($result == 1){
+			// $url = "https://api.smsgh.com/v3/messages/send?"
+			//     . "From=Central_HealthMS"
+			//     . "&To={$contact}"
+			//     . "&Content=Hello+{$fname}+{$lname},+You+have+successfully+registered+onto+the+Central+Health+System.+Your+PIN:+{$patient_system_id}.+Developed+by+Kobby_Ohene"
+			//     . "&ClientId=frbiodfp"
+			//     . "&ClientSecret=tkreglmn"
+			//     . "&RegisteredDelivery=true";
+			// 	// Fire the request and wait for the response
+			// 	$response = file_get_contents($url);
+			// 	var_dump($response);
 			?>
 				<script>
 					alert("Patient Registered!");
@@ -275,6 +400,7 @@
 					window.history.back();
 				</script>
 				<?php
+			}
 		}
 	}
 
@@ -288,7 +414,7 @@
                 if (isset($_GET["page"])) { $page  = $_GET["page"]; } else { $page=1; }; 
                 $start_from = ($page-1) * $num_rec_per_page;
 
-                $sql = "SELECT * FROM hms_local_patient_registration ORDER BY lname LIMIT $start_from, $num_rec_per_page"; 
+                $sql = "SELECT * FROM hms_local_patient_registration ORDER BY fname LIMIT $start_from, $num_rec_per_page"; 
                 $result = mysql_query ($sql); //run the query
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
@@ -347,7 +473,7 @@
 		$db -> connect();
 
 		$result = mysql_query("SELECT pv_id, hms_local_patient_registration.fname, hms_local_patient_registration.lname, hms_hospitals.h_name, hms_consulting_rooms.room_name, temperature, blood_pressure,
-								weight, height, symptoms, lab_tests, test_results, diagnosis, hms_diseases.d_name, prescription, hms_payment_mode.pm_name, amount_paid,
+								weight, height, symptoms, lab_tests, test_results, other_comments, hms_diseases.d_name, prescription, hms_payment_mode.pm_name, amount_paid,
 								date_of_input, last_update
 								FROM hms_patient_visits 
 								INNER JOIN hms_local_patient_registration ON (hms_local_patient_registration.local_p_id=hms_patient_visits.patient_id)
@@ -394,32 +520,53 @@
 		$temp  = $_REQUEST["temp"];
 		$temperature  = $_REQUEST["temperature"];
 		$theTemp = $temperature. " " . $temp;
-		$blood_pressure  = $_REQUEST["blood_pressure"];
+		$blood_pressure  = filter_input(INPUT_POST, "blood_pressure", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["blood_pressure"];
 		$weight_value  = $_REQUEST["weight_value"];
 		$weight  = $_REQUEST["weight"];
 		$theWeight = $weight_value. " " . $weight;
 		$height_value  = $_REQUEST["height_value"];
 		$height  = $_REQUEST["height"];
 		$theHeight = $height_value. " " . $height;
-		$symptoms  = $_REQUEST["symptoms"];
-		$lab_tests  = $_REQUEST["lab_tests"];
-		$test_results  = $_REQUEST["test_results"];
-		$diagnosis  = $_REQUEST["diagnosis"];
+		$symptoms  = filter_input(INPUT_POST, "symptoms", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["symptoms"];
+		$lab_tests  = filter_input(INPUT_POST, "lab_tests", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["lab_tests"];
+		$test_results  = filter_input(INPUT_POST, "test_results", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["test_results"];
+		$other_comments  = filter_input(INPUT_POST, "other_comments", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["other_comments"];
 		$disease  = $_REQUEST["disease"];
-		$prescription  = $_REQUEST["prescription"];
+		$diseases=implode(',',$disease);
+
+		$prescription  = filter_input(INPUT_POST, "prescription", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["prescription"];
 		$payment  = $_REQUEST["payment"];
-		$amount_paid  = $_REQUEST["amount_paid"];
+		$amount_paid  = filter_input(INPUT_POST, "amount_paid", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["amount_paid"];
 
 		$db = new adb();
 		$db -> connect();
-		$query1 = "SET FOREIGN_KEY_CHECKS=0";
+
+		if ($room_ref == "" || $theTemp == "" || $theWeight == "" || $symptoms == "") {
+			?>
+				<script>
+					alert("ERROR: Make sure all fields are filled!");
+					window.history.back();
+				</script>
+				<?php
+		}
+
+		else {
+			$query1 = "SET FOREIGN_KEY_CHECKS=0";
 		mysql_query($query1);
 
-		$query = "INSERT INTO hms_patient_visits (patient_id, hospital_id, consulting_room, temperature, blood_pressure, weight, height, symptoms, lab_tests, test_results, diagnosis, disease, prescription, mode_of_payment, amount_paid, date_of_input, last_update) 
-		VALUES('$id','$h_id','$room_ref', '$theTemp', '$blood_pressure', '$theWeight', '$theHeight', '$symptoms', '$lab_tests', '$test_results', '$diagnosis', '$disease', '$prescription', '$payment', '$amount_paid', CURDATE(), CURDATE())";
+		$query = "INSERT INTO hms_patient_visits (patient_id, hospital_id, consulting_room, temperature, blood_pressure, weight, height, symptoms, lab_tests, test_results, other_comments, disease, prescription, mode_of_payment, amount_paid, date_of_input, last_update) 
+		VALUES('$id','$h_id','$room_ref', '$theTemp', '$blood_pressure', '$theWeight', '$theHeight', '$symptoms', '$lab_tests', '$test_results', '$other_comments', '$diseases', '$prescription', '$payment', '$amount_paid', CURDATE(), CURDATE())";
+		$result = mysql_query($query) or die(mysql_error());
 		$query2 = "SET FOREIGN_KEY_CHECKS=1";
 		mysql_query($query2);
-		$result = mysql_query($query) or die(mysql_error());
+		
 		
 		if($result == 1){
 			?>
@@ -435,6 +582,7 @@
 					window.history.back();
 				</script>
 				<?php
+			}
 		}
 	}
 
@@ -454,14 +602,22 @@
 		$height  = $_REQUEST["height"];
 		$theHeight = $height_value. " " . $height;
 
-		$symptoms  = $_REQUEST["symptoms"];
-		$lab_tests  = $_REQUEST["lab_tests"];
-		$test_results  = $_REQUEST["test_results"];
-		$diagnosis  = $_REQUEST["diagnosis"];
+		$symptoms  = filter_input(INPUT_POST, "symptoms", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["symptoms"];
+		$lab_tests  = filter_input(INPUT_POST, "lab_tests", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["lab_tests"];
+		$test_results  = filter_input(INPUT_POST, "test_results", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["test_results"];
+		$other_comments  = filter_input(INPUT_POST, "other_comments", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["other_comments"];
 		$disease  = $_REQUEST["disease"];
-		$prescription  = $_REQUEST["prescription"];
+		$diseases=implode(',',$disease);
+
+		$prescription  = filter_input(INPUT_POST, "prescription", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["prescription"];
 		$payment  = $_REQUEST["payment"];
-		$amount_paid  = $_REQUEST["amount_paid"];
+		$amount_paid  = filter_input(INPUT_POST, "amount_paid", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["amount_paid"];
 
 		$db = new adb();
 		$db -> connect();
@@ -471,7 +627,7 @@
 
 		$query = "UPDATE hms_patient_visits SET consulting_room='$room_ref', temperature='$theTemp', blood_pressure='$blood_pressure', 
 				weight='$theWeight', height='$theHeight', symptoms='$symptoms', lab_tests='$lab_tests', test_results='$test_results', 
-				diagnosis='$diagnosis', disease='$disease', prescription='$prescription', mode_of_payment='$payment', 
+				other_comments='$other_comments', disease='$diseases', prescription='$prescription', mode_of_payment='$payment', 
 				amount_paid='$amount_paid', last_update=CURDATE()
 		WHERE hms_patient_visits.pv_id = '$id'";
 		$query2 = "SET FOREIGN_KEY_CHECKS=1";
@@ -482,7 +638,7 @@
 			?>
 				<script>
 					alert("Patient Visit Updated!");
-					window.location.href="manage_patients.php";
+					window.history.href="manage_patients.php";
 				</script>
 				<?php
 		}
@@ -502,15 +658,16 @@
 		$db -> connect();
 
 		$result = "SELECT pv_id, patient_id, hospital_id, hms_local_patient_registration.fname, hms_local_patient_registration.lname, hms_hospitals.h_name, hms_consulting_rooms.room_name, temperature, blood_pressure,
-								weight, height, symptoms, lab_tests, test_results, diagnosis, hms_diseases.d_name, prescription, hms_payment_mode.pm_name, amount_paid,
+								weight, height, symptoms, lab_tests, test_results, other_comments, hms_diseases.d_name, prescription, hms_payment_mode.pm_name, amount_paid,
 								date_of_input, last_update
 								FROM hms_patient_visits 
 								INNER JOIN hms_local_patient_registration ON (hms_local_patient_registration.local_p_id=hms_patient_visits.patient_id)
 								INNER JOIN hms_consulting_rooms ON (hms_consulting_rooms.room_id=hms_patient_visits.consulting_room)
 								INNER JOIN hms_hospitals ON (hms_hospitals.h_id=hms_patient_visits.hospital_id)
-								INNER JOIN hms_diseases ON (hms_diseases.d_id=hms_patient_visits.disease)
+								INNER JOIN hms_diseases 
+								ON FIND_IN_SET(hms_diseases.d_id, hms_patient_visits.disease) <> 0
 								INNER JOIN hms_payment_mode ON (hms_payment_mode.pm_id=hms_patient_visits.mode_of_payment)
-								WHERE pv_id='$id'";
+								WHERE pv_id='$id' GROUP BY hms_diseases.d_name";
 
 		if(!$db->query($result)){
 				return false;
@@ -544,25 +701,23 @@
 
 	function edit_patient(){
 		if (isset($_POST['submit'])) {
-		$id = $_REQUEST['id'];
-		$fname  = $_REQUEST["fname"];
-		$lname  = $_REQUEST["lname"];
+
+		$fname  = filter_input(INPUT_POST, "fname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["fname"];
+		$lname  = filter_input(INPUT_POST, "lname", FILTER_SANITIZE_STRING);
+		//$_REQUEST["lname"];
 		$gender  = $_REQUEST["gender"];
-		$birthDate  = $_REQUEST["date_of_birth"];
-		$address  = $_REQUEST["address"];
+		$birthDate  = $_REQUEST["birthDate"];
+		$address  = filter_input(INPUT_POST, "address", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["address"];
 		$nationality  = $_REQUEST["nationality"];
 		$region  = $_REQUEST["region_ref"];
 		$district  = $_REQUEST["district_ref"];
 		$sub_district  = $_REQUEST["sub_district_ref"];
-		$contact  = $_REQUEST["contact"];
-		$email  = $_REQUEST["email"];
-
-		$pin = mt_rand(100000,999999);
-		$thefname = strtolower($fname);
-		$onefname = $thefname[0];
-		$thelname = strtolower($lname);
-		$o_username = $onefname."".$thelname;
-		$patient_system_id = $onefname."".$thelname."".$pin;
+		$contact  = filter_input(INPUT_POST, "contact", FILTER_SANITIZE_STRING);
+		// $_REQUEST["contact"];
+		$email  = filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL);
+		// $_REQUEST["email"];
 
 		if ($sub_district == "" || $sub_district == 0 || $gender == "" || $gender == 0){
 			?>
@@ -592,6 +747,13 @@
 				<?php
 		}
 		else {
+
+			$pin = mt_rand(100000,999999);
+		$thefname = strtolower($fname);
+		$onefname = $thefname[0];
+		$thelname = strtolower($lname);
+		$o_username = $onefname."".$thelname;
+		$patient_system_id = $onefname."".$thelname."".$pin;
 
 		$db = new adb();
 		$db -> connect();
@@ -626,7 +788,7 @@
 		$health_progress = ``;
 		$prescriptions = ``;
 		$amount_paid = ``;
-		$date_of_discharge = `0`;
+		$date_of_discharge = `0000-00-00`;
 
 		$db = new adb();
 		$db -> connect();
@@ -766,16 +928,49 @@
 
 	function enter_patient_admit(){
 		$id  = $_REQUEST["id"];
-		$ward = $_REQUEST["ward"];
-		$health_progress = $_REQUEST["health_progress"];
-		$prescriptions = $_REQUEST["prescriptions"];
-		$amount_paid = $_REQUEST["amount_paid"];
-		$date_of_discharge = "";
-
 		$db = new adb();
 		$db -> connect();
 
 		$query1 = "SET FOREIGN_KEY_CHECKS=0";
+		mysql_query($query1);
+
+		$result = mysql_query("SELECT pa_id, hms_local_patient_registration.fname, hms_local_patient_registration.lname, hms_hospitals.h_name, patient_visit_id, hms_wards.ward_name,
+										health_progress, prescriptions, hms_patient_admit.amount_paid, date_of_admit, date_of_discharge
+								FROM hms_patient_admit
+								INNER JOIN hms_local_patient_registration ON (hms_local_patient_registration.local_p_id=hms_patient_admit.patient_id)
+								INNER JOIN hms_hospitals ON (hms_hospitals.h_id=hms_patient_admit.hospital_id)
+								INNER JOIN hms_patient_visits ON (hms_patient_visits.pv_id=hms_patient_admit.patient_visit_id)
+								INNER JOIN hms_wards ON (hms_wards.ward_id=hms_patient_admit.ward)
+								WHERE hms_patient_admit.patient_visit_id= '$id' AND date_of_discharge='0000-00-00'");
+		$query2 = "SET FOREIGN_KEY_CHECKS=1";
+		mysql_query($query2);
+		if($result === FALSE) { 
+		    die(mysql_error()); // TODO: better error handling
+		}
+
+		if (mysql_num_rows($result) > 0) {
+			$id  = $_REQUEST["id"];
+		$ward = $_REQUEST["ward"];
+		$health_progress = filter_input(INPUT_POST, "health_progress", FILTER_SANITIZE_SPECIAL_CHARS);
+		//$_REQUEST["health_progress"];
+		$prescriptions = filter_input(INPUT_POST, "prescriptions", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["prescriptions"];
+		$amount_paid = filter_input(INPUT_POST, "amount_paid", FILTER_SANITIZE_SPECIAL_CHARS);
+		// $_REQUEST["amount_paid"];
+		$date_of_discharge = "0000-00-00";
+
+			if ($ward == "" || $ward == 0 || $ward == "Ward") {
+				?>
+				<script>
+					alert("ERROR: Make sure the Ward is Selected!");
+					window.history.back();
+				</script>
+				<?php
+		
+			}
+
+			else {
+				$query1 = "SET FOREIGN_KEY_CHECKS=0";
 		mysql_query($query1);
 
 		$query = "UPDATE hms_patient_admit SET ward='$ward', health_progress='$health_progress', prescriptions='$prescriptions', 
@@ -789,7 +984,7 @@
 			?>
 				<script>
 					alert("Patient Admit Details Entered!");
-					window.location.href="manage_patients.php";
+					window.history.back();
 				</script>
 				<?php
 		}
@@ -797,6 +992,18 @@
 			?>
 				<script>
 					alert("ERROR: Make sure all fields are filled!");
+					window.history.back();
+				</script>
+				<?php
+				}
+			}
+
+		}
+
+		else {
+			?>
+				<script>
+					alert("ERROR: Patient Is Discharged! Information Cannot be Updated!");
 					window.history.back();
 				</script>
 				<?php
@@ -817,12 +1024,12 @@
 								INNER JOIN hms_patient_visits ON (hms_patient_visits.pv_id=hms_patient_admit.patient_visit_id)
 								INNER JOIN hms_wards ON (hms_wards.ward_id=hms_patient_admit.ward)
 								WHERE hms_patient_admit.patient_visit_id= '$id'
-								AND date_of_discharge='0'");
+								AND date_of_discharge='0000-00-00'");
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
 
-		if(!mysql_num_rows($result) > 0){
+		if(mysql_num_rows($result) > 0){
 
 		$query1 = "SET FOREIGN_KEY_CHECKS=0";
 		mysql_query($query1);
@@ -836,7 +1043,7 @@
 			?>
 				<script>
 					alert("Patient Is Discharged!");
-					window.location.href="manage_patients.php";
+					window.history.back();
 				</script>
 				<?php
 		}
@@ -873,7 +1080,7 @@
 								INNER JOIN hms_patient_visits ON (hms_patient_visits.pv_id=hms_patient_admit.patient_visit_id)
 								INNER JOIN hms_wards ON (hms_wards.ward_id=hms_patient_admit.ward)
 								WHERE hms_patient_admit.patient_visit_id= '$id'
-								AND date_of_discharge=0");
+								AND date_of_discharge='0000-00-00'");
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
@@ -887,6 +1094,7 @@
 		}
 
 		else{
+
 			$result = mysql_query("SELECT pa_id, hms_local_patient_registration.fname, hms_local_patient_registration.lname, hms_hospitals.h_name, patient_visit_id, hms_wards.ward_name,
 										health_progress, prescriptions, hms_patient_admit.amount_paid, date_of_admit, date_of_discharge
 								FROM hms_patient_admit
@@ -895,7 +1103,7 @@
 								INNER JOIN hms_patient_visits ON (hms_patient_visits.pv_id=hms_patient_admit.patient_visit_id)
 								INNER JOIN hms_wards ON (hms_wards.ward_id=hms_patient_admit.ward)
 								WHERE hms_patient_admit.patient_visit_id= '$id'
-								AND date_of_discharge!=0");
+								AND date_of_discharge!='0000-00-00'");
             $row = mysql_fetch_array($result);
 		    while($row){
 		    	
@@ -985,7 +1193,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='gender' id='gender' class='form-control'>";
-		echo "<option>Gender</option>";
+		echo "<option>Select Gender</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[gender_id]>$row[gender]</option>";
 		}
@@ -1010,25 +1218,24 @@
 	function edit_health_official(){
 		if (isset($_POST['submit'])) {
 		$id = $_REQUEST['id'];
-		$o_fname  = $_REQUEST["o_fname"];
-		$o_lname  = $_REQUEST["o_lname"];
-		$o_password1  = $_REQUEST["o_password1"];
-		$o_password2  = $_REQUEST["o_password2"];
-		$o_contact  = $_REQUEST["o_contact"];
-		$o_email  = $_REQUEST["o_email"];
-
-		$pin = mt_rand(1000,9999);
-		$thefname = strtolower($o_fname);
-		$onefname = $thefname[0];
-		$thelname = strtolower($o_lname);
-		$o_username = $onefname."".$thelname;
-		$o_system_id = $onefname."".$thelname."".$pin;
+		$o_fname  = filter_input(INPUT_POST, "o_fname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_fname"];
+		$o_lname  = filter_input(INPUT_POST, "o_lname", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_lname"];
+		$o_password1  = filter_input(INPUT_POST, "o_password1", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_password1"];
+		$o_password2  = filter_input(INPUT_POST, "o_password2", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_password2"];
+		$o_contact  = filter_input(INPUT_POST, "o_contact", FILTER_SANITIZE_STRING);
+		// $_REQUEST["o_contact"];
+		$o_email  = filter_input(INPUT_POST, "o_email", FILTER_SANITIZE_EMAIL);
+		// $_REQUEST["o_email"];
 
 		if ($o_password1 != $o_password2){
 			?>
 				<script>
 					alert("ERROR: Passwords Do Not Match!");
-					window.location.href="dashboard.php";
+					window.location.back();
 
 				</script>
 				<?php
@@ -1043,6 +1250,13 @@
 				<?php
 		}
 		else {
+
+			$pin = mt_rand(1000,9999);
+		$thefname = strtolower($o_fname);
+		$onefname = $thefname[0];
+		$thelname = strtolower($o_lname);
+		$o_username = $onefname."".$thelname;
+		$o_system_id = $onefname."".$thelname."".$pin;
 
 		$db = new adb();
 		$db -> connect();
@@ -1079,7 +1293,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='o_health_center' id='o_health_center' class='form-control'>";
-		echo "<option>Hospital</option>";
+		// echo "<option>Select Hospital</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[h_id]>$row[h_name]</option>";
 		}
@@ -1096,7 +1310,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='room_ref' id='room_ref' class='form-control'>";
-		echo "<option>Consulting Room</option>";
+		// echo "<option>Select Consulting Room</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[room_id]>$row[room_name]</option>";
 		}
@@ -1113,7 +1327,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='temp' id='temp' class='form-control'>";
-		echo "<option>Unit</option>";
+		// echo "<option>Select Unit</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[temp_unit]>$row[temp_unit]</option>";
 		}
@@ -1130,7 +1344,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='weight' id='weight' class='form-control'>";
-		echo "<option>Unit</option>";
+		// echo "<option>Select Unit</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[weight_unit]>$row[weight_unit]</option>";
 		}
@@ -1147,7 +1361,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='height' id='height' class='form-control'>";
-		echo "<option>Unit</option>";
+		// echo "<option>Select Unit</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[height_unit]>$row[height_unit]</option>";
 		}
@@ -1163,10 +1377,10 @@
 		if($result === FALSE) { 
 		    die(mysql_error()); // TODO: better error handling
 		}
-		echo "<select name='disease' id='disease' class='form-control'>";
-		echo "<option>Disease</option>";
+		echo "<select name='disease[]' multiple='multiple' id='disease' class='form-control'>";
+		// echo "<option>Select Disease</option>";
 		while($row = mysql_fetch_array($result)){
-			echo "<option value=$row[d_id]>$row[d_name]</option>";
+			echo "<option value={$row[d_id]}>{$row[d_name]}</option>";
 		}
 		echo "</select>";
 	}
@@ -1181,7 +1395,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='payment' id='payment' class='form-control'>";
-		echo "<option>Mode Of Payment</option>";
+		// echo "<option>Select Mode Of Payment</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[pm_id]>$row[pm_name]</option>";
 		}
@@ -1198,7 +1412,7 @@
 		    die(mysql_error()); // TODO: better error handling
 		}
 		echo "<select name='ward' id='ward' class='form-control'>";
-		echo "<option>Ward</option>";
+		echo "<option>Select Ward</option>";
 		while($row = mysql_fetch_array($result)){
 			echo "<option value=$row[ward_id]>$row[ward_name]</option>";
 		}

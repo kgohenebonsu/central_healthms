@@ -163,13 +163,12 @@
                               class='form-control' value="" name='test_results' id='test_results' aria-describedby='basic-addon1'><?php echo $row['test_results']; ?></textarea>
                             </div><br>
                             <div class='input-group'>
-                              <span class='input-group-addon' id='basic-addon1'>Diagnosis</span>
+                              <span class='input-group-addon' id='basic-addon1'>Other Comments</span>
                               <textarea type='text' 
-                              class='form-control' value="" name='diagnosis' id='diagnosis' aria-describedby='basic-addon1'><?php echo $row['diagnosis']; ?></textarea>
+                              class='form-control' value="" name='other_comments' id='other_comments' aria-describedby='basic-addon1'><?php echo $row['other_comments']; ?></textarea>
                             </div><br>
                             <?php
                             echo "Current Disease: <b>$row[d_name]</b><br>";
-                            echo "Select 'OTHER' if disease is not listed<br>";
                                 display_diseases();
                                 echo "<br>";
                             ?>
