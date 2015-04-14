@@ -7,13 +7,13 @@
  */
 
 define("DB_HOST", 'localhost');
-// define("DB_NAME", 'csashesi_kwabena-ohene-bonsu');
-define("DB_NAME", 'healthms');
+define("DB_NAME", 'csashesi_kwabena-ohene-bonsu');
+// define("DB_NAME", 'csashesi_kwabenaohenebonsu');
 define("DB_PORT", 3306);
-// define("DB_USER","csashesi_ko15");
-define("DB_USER","root");
-// define("DB_PWORD","db!6fc448");
-define("DB_PWORD","");
+define("DB_USER","csashesi_ko15");
+// define("DB_USER","root");
+define("DB_PWORD","db!6fc448");
+// define("DB_PWORD","");
 
 define("LOG_LEVEL_SEC",0);
 define("LOG_LEVEL_DB_FAIL",0);
